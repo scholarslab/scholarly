@@ -14,12 +14,15 @@ import re
 import requests
 import sys
 import time
+from selenium import webdriver
+from requests.utils import dict_from_cookiejar
 
 _GOOGLEID = hashlib.md5(str(random.random()).encode('utf-8')).hexdigest()[:16]
-_COOKIES = {'GSP': 'ID={0}:CF=4'.format(_GOOGLEID)}
+_COOKIES = {
+    'GSP': 'A=6yU0vA:CPTS=1557938226:LM=1557938226:S=sMcF_7bRNZvWzz5p'}
 _HEADERS = {
     'accept-language': 'en-US,en',
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/41.0.2272.76 Chrome/41.0.2272.76 Safari/537.36',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:66.0) Gecko/20100101 Firefox/66.0',
     'accept': 'text/html,application/xhtml+xml,application/xml'
     }
 _HOST = 'https://scholar.google.com'
@@ -37,7 +40,25 @@ _SCHOLARPUBRE = r'cites=([\w-]*)'
 _EMAILAUTHORRE = r'Verified email at '
 
 _SESSION = requests.Session()
+
+_SESSION.cookies.set_cookie(requests.cookies.create_cookie(
+    domain='.scholar.google.com', name='GSP', value='A=6yU0vA: CPTS=1557938226: LM=1557938226: S=sMcF_7bRNZvWzz5p')
+)
+
 _PAGESIZE = 100
+#_DRIVER = webdriver.Firefox()
+#_DRIVER.get("https://scholar.google.com")
+
+def _handle_captcha2(url, cookies):
+    print(_COOKIES)
+    print(cookies)
+    print(_SESSION.cookies.get_dict())
+    # print(_DRIVER.get_cookies())
+    # print(url)
+    # for key, value in _SESSION.cookies.get_dict().items():
+    #     # TODO: may be "domain" would also be needed?
+    #     _DRIVER.add_cookie({'name': key, 'value': value})
+    #_DRIVER.get(url)
 
 
 def _handle_captcha(url):
@@ -68,20 +89,27 @@ def _get_page(pagerequest):
     """Return the data for a page on scholar.google.com"""
     # Note that we include a sleep to avoid overloading the scholar server
     time.sleep(5+random.uniform(0, 5))
-    resp = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
-    if resp.status_code == 200:
-        return resp.text
-    if resp.status_code == 503:
-        # Inelegant way of dealing with the G captcha
-        raise Exception('Error: {0} {1}'.format(resp.status_code, resp.reason))
-        # TODO: Need to fix captcha handling
-        # dest_url = requests.utils.quote(_SCHOLARHOST+pagerequest)
-        # soup = BeautifulSoup(resp.text, 'html.parser')
-        # captcha_url = soup.find('img').get('src')
-        # resp = _handle_captcha(captcha_url)
-        # return _get_page(re.findall(r'https:\/\/(?:.*?)(\/.*)', resp)[0])
-    else:
-        raise Exception('Error: {0} {1}'.format(resp.status_code, resp.reason))
+    while True:
+        resp = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
+        if resp.status_code == 200:
+            if "Please show you" in resp.text:
+                cookies = dict_from_cookiejar(resp.cookies)
+                _handle_captcha2(pagerequest, cookies)
+                input("Solve CAPTCHA, then press a key...")
+            else:
+                return resp.text
+        elif resp.status_code == 503:
+            # Inelegant way of dealing with the G captcha
+            raise Exception('Error: {0} {1}'.format(resp.status_code, resp.reason))
+            
+            # TODO: Need to fix captcha handling
+            # dest_url = requests.utils.quote(_SCHOLARHOST+pagerequest)
+            # soup = BeautifulSoup(resp.text, 'html.parser')
+            # captcha_url = soup.find('img').get('src')
+            # resp = _handle_captcha(captcha_url)
+            # return _get_page(re.findall(r'https:\/\/(?:.*?)(\/.*)', resp)[0])
+        else:
+            raise Exception('Error: {0} {1}'.format(resp.status_code, resp.reason))
 
 
 def _get_soup(pagerequest):
@@ -143,6 +171,7 @@ class Publication(object):
                 self.bib['url'] = title.find('a')['href']
             authorinfo = databox.find('div', class_='gs_a')
             self.bib['author'] = ' and '.join([i.strip() for i in authorinfo.text.split(' - ')[0].split(',')])
+            self.bib['journal'] = authorinfo.text.split(' - ')[1].split(",")[0]
             if databox.find('div', class_='gs_rs'):
                 self.bib['abstract'] = databox.find('div', class_='gs_rs').text
                 if self.bib['abstract'][0:8].lower() == 'abstract':
@@ -223,7 +252,7 @@ class Author(object):
         else:
             self.id = re.findall(_CITATIONAUTHRE, __data('a')[0]['href'])[0]
             self.url_picture = _HOST+'/citations?view_op=medium_photo&user={}'.format(self.id)
-            self.name = __data.find('h3', class_='gsc_oai_name').text
+            self.name = __data.find('h3', class_='gs_ai_name').text
             affiliation = __data.find('div', class_='gsc_oai_aff')
             if affiliation:
                 self.affiliation = affiliation.text
