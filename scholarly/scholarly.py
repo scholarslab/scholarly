@@ -15,11 +15,8 @@ import requests
 import sys
 import time
 from selenium import webdriver
-from requests.utils import dict_from_cookiejar
 
 _GOOGLEID = hashlib.md5(str(random.random()).encode('utf-8')).hexdigest()[:16]
-_COOKIES = {
-    'GSP': 'A=6yU0vA:CPTS=1558016814:LM=1558016814:S=bhENYuS9R2rkqPJa'}
 _HEADERS = {
     'accept-language': 'en-US,en',
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:66.0) Gecko/20100101 Firefox/66.0',
@@ -50,14 +47,9 @@ _DRIVER = webdriver.Firefox()
 _DRIVER.get("https://scholar.google.com")
 
 def _handle_captcha2(url, cookies):
-    #print(_SESSION.cookies)
-    # print(_DRIVER.get_cookies())
-    # print(url)
     for cookie in _SESSION.cookies:
-        print(cookie.name+": "+cookie.value+" for "+cookie.domain)
+        #print(cookie.name+": "+cookie.value+" for "+cookie.domain)
         _DRIVER.add_cookie({'name': cookie.name, 'value': cookie.value, 'path': cookie.path, 'domain':cookie.domain})
-    #     # TODO: may be "domain" would also be needed?
-    #     _DRIVER.add_cookie({'name': key, 'value': value})
     _DRIVER.get(url)
     input("Solve CAPTCHA, then press a key...")
     for cookie in _DRIVER.get_cookies():
@@ -65,29 +57,28 @@ def _handle_captcha2(url, cookies):
         cookie.pop("expiry", None)
         _SESSION.cookies.set(**cookie)
 
-
-def _handle_captcha(url):
-    # TODO: PROBLEMS HERE! NEEDS ATTENTION
-    # Get the captcha image
-    captcha_url = _HOST + '/sorry/image?id={0}'.format(g_id)
-    captcha = _SESSION.get(captcha_url, headers=_HEADERS)
-    # Upload to remote host and display to user for human verification
-    img_upload = requests.post('http://postimage.org/',
-        files={'upload[]': ('scholarly_captcha.jpg', captcha.text)})
-    print(img_upload.text)
-    img_url_soup = BeautifulSoup(img_upload.text, 'html.parser')
-    img_url = img_url_soup.find_all(alt='scholarly_captcha')[0].get('src')
-    print('CAPTCHA image URL: {0}'.format(img_url))
-    # Need to check Python version for input
-    if sys.version[0]=="3":
-        g_response = input('Enter CAPTCHA: ')
-    else:
-        g_response = raw_input('Enter CAPTCHA: ')
-    # Once we get a response, follow through and load the new page.
-    url_response = _HOST+'/sorry/CaptchaRedirect?continue={0}&id={1}&captcha={2}&submit=Submit'.format(dest_url, g_id, g_response)
-    resp_captcha = _SESSION.get(url_response, headers=_HEADERS)
-    print('Forwarded to {0}'.format(resp_captcha.url))
-    return resp_captcha.url
+# def _handle_captcha(url):
+#     # TODO: PROBLEMS HERE! NEEDS ATTENTION
+#     # Get the captcha image
+#     captcha_url = _HOST + '/sorry/image?id={0}'.format(g_id)
+#     captcha = _SESSION.get(captcha_url, headers=_HEADERS)
+#     # Upload to remote host and display to user for human verification
+#     img_upload = requests.post('http://postimage.org/',
+#         files={'upload[]': ('scholarly_captcha.jpg', captcha.text)})
+#     print(img_upload.text)
+#     img_url_soup = BeautifulSoup(img_upload.text, 'html.parser')
+#     img_url = img_url_soup.find_all(alt='scholarly_captcha')[0].get('src')
+#     print('CAPTCHA image URL: {0}'.format(img_url))
+#     # Need to check Python version for input
+#     if sys.version[0]=="3":
+#         g_response = input('Enter CAPTCHA: ')
+#     else:
+#         g_response = raw_input('Enter CAPTCHA: ')
+#     # Once we get a response, follow through and load the new page.
+#     url_response = _HOST+'/sorry/CaptchaRedirect?continue={0}&id={1}&captcha={2}&submit=Submit'.format(dest_url, g_id, g_response)
+#     resp_captcha = _SESSION.get(url_response, headers=_HEADERS)
+#     print('Forwarded to {0}'.format(resp_captcha.url))
+#     return resp_captcha.url
 
 
 def _get_page(pagerequest):
@@ -95,7 +86,7 @@ def _get_page(pagerequest):
     # Note that we include a sleep to avoid overloading the scholar server
     time.sleep(5+random.uniform(0, 5))
     while True:
-        resp = _SESSION.get(pagerequest, headers=_HEADERS, cookies=_COOKIES)
+        resp = _SESSION.get(pagerequest, headers=_HEADERS)
         if resp.status_code == 200:
             if "Please show you" in resp.text:
                 cookies = dict_from_cookiejar(resp.cookies)

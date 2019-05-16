@@ -39,7 +39,7 @@ for file in [f for f in listdir(".") if isfile(join(".", f)) and f.endswith(".cs
             query = scholarly.search_pubs_query(row[2])
             matched = False
             for result in query:
-                print(result)
+                #print(result)
                 if row[3].lower()[:44] in result.bib["journal"].lower():
                     print(
                         "Matched! " + result.bib["title"] + " / " + result.bib["author"])
@@ -52,9 +52,9 @@ for file in [f for f in listdir(".") if isfile(join(".", f)) and f.endswith(".cs
                     break
                 else:
                     print(
-                        "Not matched! " + result.bib["title"] + " / " + result.bib["author"])
+                        "Result does not match query! Checking next document. " + result.bib["title"] + " / " + result.bib["author"])
             if not matched:
-                print("No matches found. Skipping.")
+                print("ERROR: No matches found. Skipping.")
                 not_found.append(row)
                 with open("not_found.json", 'w') as outfile:
                     outfile.write(json.dumps(not_found))
