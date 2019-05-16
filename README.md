@@ -1,3 +1,13 @@
+## CAPTCHA hack
+I hacked together a quick and dirty way to handle CAPTCHAs. When it encounters the "Prove that you're human" page, it transfers the Request session cookies into Selenium, opens up a new browser instance to allow the user to solve the CAPTCHA, and then transfers the new session cookies back to Requests. 
+
+In addition to the stuff that the Pipfile handles, this requires installing a webdriver, which I've hardedcoded here to geckodriver because chrome doesn't seem to play well (hmmmmm). Also, I suspect that the User-Agent for the script (scholarly.py line 22) must match the browser.
+
+## SLab version notes
+gs_scrape will read the latest (alphabetically last) gs-* json file to read in previously scraped data. It will create a single new gs-{epoch}.json file that is updated after every row to store scraped data. This preserves progress.
+
+It reads all csv files in the directory. These should retain a consistent, expected column structure. Quick and dirty. -SSL
+
 # scholarly
 scholarly is a module that allows you to retrieve author and publication information from [Google Scholar](https://scholar.google.com) in a friendly, Pythonic way.
 
