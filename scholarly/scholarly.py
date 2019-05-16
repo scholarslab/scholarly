@@ -19,7 +19,7 @@ from requests.utils import dict_from_cookiejar
 
 _GOOGLEID = hashlib.md5(str(random.random()).encode('utf-8')).hexdigest()[:16]
 _COOKIES = {
-    'GSP': 'A=6yU0vA:CPTS=1557938226:LM=1557938226:S=sMcF_7bRNZvWzz5p'}
+    'GSP': 'A=6yU0vA:CPTS=1558016814:LM=1558016814:S=bhENYuS9R2rkqPJa'}
 _HEADERS = {
     'accept-language': 'en-US,en',
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:66.0) Gecko/20100101 Firefox/66.0',
@@ -46,19 +46,24 @@ _SESSION.cookies.set_cookie(requests.cookies.create_cookie(
 )
 
 _PAGESIZE = 100
-#_DRIVER = webdriver.Firefox()
-#_DRIVER.get("https://scholar.google.com")
+_DRIVER = webdriver.Firefox()
+_DRIVER.get("https://scholar.google.com")
 
 def _handle_captcha2(url, cookies):
-    print(_COOKIES)
-    print(cookies)
-    print(_SESSION.cookies.get_dict())
+    #print(_SESSION.cookies)
     # print(_DRIVER.get_cookies())
     # print(url)
-    # for key, value in _SESSION.cookies.get_dict().items():
+    for cookie in _SESSION.cookies:
+        print(cookie.name+": "+cookie.value+" for "+cookie.domain)
+        _DRIVER.add_cookie({'name': cookie.name, 'value': cookie.value, 'path': cookie.path, 'domain':cookie.domain})
     #     # TODO: may be "domain" would also be needed?
     #     _DRIVER.add_cookie({'name': key, 'value': value})
-    #_DRIVER.get(url)
+    _DRIVER.get(url)
+    input("Solve CAPTCHA, then press a key...")
+    for cookie in _DRIVER.get_cookies():
+        cookie.pop("httpOnly", None)
+        cookie.pop("expiry", None)
+        _SESSION.cookies.set(**cookie)
 
 
 def _handle_captcha(url):
@@ -80,7 +85,7 @@ def _handle_captcha(url):
         g_response = raw_input('Enter CAPTCHA: ')
     # Once we get a response, follow through and load the new page.
     url_response = _HOST+'/sorry/CaptchaRedirect?continue={0}&id={1}&captcha={2}&submit=Submit'.format(dest_url, g_id, g_response)
-    resp_captcha = _SESSION.get(url_response, headers=_HEADERS, cookies=_COOKIES)
+    resp_captcha = _SESSION.get(url_response, headers=_HEADERS)
     print('Forwarded to {0}'.format(resp_captcha.url))
     return resp_captcha.url
 
@@ -95,7 +100,6 @@ def _get_page(pagerequest):
             if "Please show you" in resp.text:
                 cookies = dict_from_cookiejar(resp.cookies)
                 _handle_captcha2(pagerequest, cookies)
-                input("Solve CAPTCHA, then press a key...")
             else:
                 return resp.text
         elif resp.status_code == 503:

@@ -6,7 +6,6 @@ import calendar
 import json
 import time
 from requests.utils import dict_from_cookiejar
-from selenium import webdriver
 
 # Load last data json
 filename = None
@@ -18,6 +17,8 @@ if filename:
         data = json.loads(infile.read())
 else:
     data = {}
+
+not_found = []
 
 outfilename = "gs-"+str(calendar.timegm(time.gmtime()))+".json"
 for file in [f for f in listdir(".") if isfile(join(".", f)) and f.endswith(".csv")]:
@@ -54,6 +55,9 @@ for file in [f for f in listdir(".") if isfile(join(".", f)) and f.endswith(".cs
                         "Not matched! " + result.bib["title"] + " / " + result.bib["author"])
             if not matched:
                 print("No matches found. Skipping.")
+                not_found.append(row)
+                with open("not_found.json", 'w') as outfile:
+                    outfile.write(json.dumps(not_found))
                 continue
             with open(outfilename, 'w') as outfile:
                 outfile.write(json.dumps(data))
