@@ -171,7 +171,8 @@ class Publication(object):
                 self.bib['url'] = title.find('a')['href']
             authorinfo = databox.find('div', class_='gs_a')
             self.bib['author'] = ' and '.join([i.strip() for i in authorinfo.text.split(' - ')[0].split(',')])
-            self.bib['journal'] = authorinfo.text.split(' - ')[1].split(",")[0]
+            if len(authorinfo.text.split(' - '))>1:
+                self.bib['journal'] = authorinfo.text.split(' - ')[1].split(",")[0]
             if databox.find('div', class_='gs_rs'):
                 self.bib['abstract'] = databox.find('div', class_='gs_rs').text
                 if self.bib['abstract'][0:8].lower() == 'abstract':
@@ -222,8 +223,9 @@ class Publication(object):
                 self.bib['eprint'] = soup.find('div', class_='gsc_vcd_title_ggi').a['href']
             self._filled = True
         elif self.source == 'scholar':
-            bibtex = _get_page(self.url_scholarbib)
-            self.bib.update(bibtexparser.loads(bibtex).entries[0])
+            if hasattr(self,"url_scholarbib"):
+                bibtex = _get_page(self.url_scholarbib)
+                self.bib.update(bibtexparser.loads(bibtex).entries[0])
             self._filled = True
         return self
 

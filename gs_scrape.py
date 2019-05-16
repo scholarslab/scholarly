@@ -39,20 +39,22 @@ for file in [f for f in listdir(".") if isfile(join(".", f)) and f.endswith(".cs
             matched = False
             for result in query:
                 print(result)
-                if row[3].lower()[:44] in result.bib["journal"].lower() and row[0].split(",")[0].lower() in result.bib["author"].lower():
+                if row[3].lower()[:44] in result.bib["journal"].lower():
                     print(
                         "Matched! " + result.bib["title"] + " / " + result.bib["author"])
                     print("================\n"+str(result)+"================\n")
                     matched = True
-                    data[doc_id]["docinfo"] = result
-                    data[doc_id]["citedby"] = result.get_citedby()
+                    data[doc_id]["docinfo"] = result.__dict__
+                    data[doc_id]["citedby"] = []
+                    for citedby in result.get_citedby():
+                        data[doc_id]["citedby"].append(citedby.__dict__)
                     break
                 else:
                     print(
                         "Not matched! " + result.bib["title"] + " / " + result.bib["author"])
             if not matched:
-                print("No matches found or script has been CAPTCHAed. Quitting.")
-                exit()
+                print("No matches found. Skipping.")
+                continue
             with open(outfilename, 'w') as outfile:
                 outfile.write(json.dumps(data))
 
