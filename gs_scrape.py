@@ -13,7 +13,7 @@ input_files = []
 json_prefix = "gs"
 if len(sys.argv) > 1:
     print("Using csv input and json state for: ",sys.argv[1:])
-    input_files = sys.argv[1:]
+    input_files = [sys.argv[1]]
     json_prefix = ".".join(sys.argv[1].split(".csv")[:-1])
 else:
     input_files = [f for f in listdir(".") if isfile(join(".", f)) and f.endswith(".csv")]
