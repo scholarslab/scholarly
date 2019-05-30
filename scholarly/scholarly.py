@@ -103,7 +103,7 @@ def _get_page(pagerequest):
             # resp = _handle_captcha(captcha_url)
             # return _get_page(re.findall(r'https:\/\/(?:.*?)(\/.*)', resp)[0])
         else:
-            raise Exception('Error: {0} {1} {2}'.format(resp.status_code, resp.reason,str(resp.headers))
+            raise Exception('Error: {0} {1} {2}'.format(resp.status_code, resp.reason, str(resp.headers)))
 
 
 def _get_soup(pagerequest):
