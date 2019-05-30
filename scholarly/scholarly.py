@@ -46,7 +46,7 @@ _PAGESIZE = 100
 _DRIVER = webdriver.Firefox()
 _DRIVER.get("https://scholar.google.com")
 
-def _handle_captcha2(url, cookies):
+def _handle_captcha2(url):
     for cookie in _SESSION.cookies:
         #print(cookie.name+": "+cookie.value+" for "+cookie.domain)
         _DRIVER.add_cookie({'name': cookie.name, 'value': cookie.value, 'path': cookie.path, 'domain':cookie.domain})
@@ -89,8 +89,7 @@ def _get_page(pagerequest):
         resp = _SESSION.get(pagerequest, headers=_HEADERS)
         if resp.status_code == 200:
             if "Please show you" in resp.text:
-                cookies = dict_from_cookiejar(resp.cookies)
-                _handle_captcha2(pagerequest, cookies)
+                _handle_captcha2(pagerequest)
             else:
                 return resp.text
         elif resp.status_code == 503:
