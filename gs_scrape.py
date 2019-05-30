@@ -53,7 +53,7 @@ for file in input_files:
             query = scholarly.search_pubs_query(row[2])
             matched = False
             for result in query:
-                if row[3].lower()[:44] in result.bib["journal"].lower():
+                if "journal" in result.bib and row[3].lower()[:44] in result.bib["journal"].lower():
                     print(
                         "Matched! " + result.bib["title"] + " / " + result.bib["author"])
                     print("================\n"+str(result)+"================\n")
