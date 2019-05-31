@@ -92,10 +92,11 @@ def _get_page(pagerequest):
                 _handle_captcha2(pagerequest)
             else:
                 return resp.text
-        elif resp.status_code == 503:
+        elif resp.status_code == 503 or resp.status_code == 403 or resp.status_code == 429:
             # Inelegant way of dealing with the G captcha
-            raise Exception('Error: {0} {1}'.format(resp.status_code, resp.reason))
-            
+            #raise Exception('Error: {0} {1}'.format(resp.status_code, resp.reason))
+            print("Got a non-200 response code from Google: {0} {1} {2}".format(resp.status_code, resp.reason, str(resp.headers)))
+            _handle_captcha2(pagerequest)
             # TODO: Need to fix captcha handling
             # dest_url = requests.utils.quote(_SCHOLARHOST+pagerequest)
             # soup = BeautifulSoup(resp.text, 'html.parser')
