@@ -9,6 +9,12 @@ from requests.utils import dict_from_cookiejar
 import sys
 
 
+def match_journals(input,gs):
+    for word in gs.strip("…. ").split(" "):
+        if word.upper() not in input.upper():
+            return False
+    return True
+
 input_files = []
 json_prefix = "gs"
 if len(sys.argv) > 1:
@@ -53,7 +59,7 @@ for file in input_files:
             query = scholarly.search_pubs_query(row[2])
             matched = False
             for result in query:
-                if "journal" in result.bib and row[3].lower()[:44] in result.bib["journal"].lower():
+                if "journal" in result.bib and match_journals(row[3], result.bib["journal"]):
                     print(
                         "Matched! " + result.bib["title"] + " / " + result.bib["author"])
                     print("================\n"+str(result)+"================\n")
