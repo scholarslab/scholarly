@@ -39,7 +39,7 @@ for file in input_files:
     with open(file, newline='') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
-            if row[2] == "Article Title":
+            if len(row)==0 or row[2] == "Article Title":
                 continue
             # Doc UID = author + title + journal name.
             # Ideally, should use DOI, but not always available
